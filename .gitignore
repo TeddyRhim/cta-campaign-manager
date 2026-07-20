@@ -1,0 +1,30 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Virtual environment
+.venv/
+venv/
+
+# Environment
+.env
+.env.*
+
+# Database
+*.sqlite3
+
+# Alembic
+*.pyc
+
+# IDE
+.vscode/
+.idea/
+
+# Node (future frontend)
+node_modules/
+dist/
+
+# OS
+.DS_Store
+Thumbs.db
