@@ -2,8 +2,9 @@ import os
 
 from datetime import datetime, timedelta, timezone
 
-from jose import jwt
+from jose import JWTError, jwt
 from passlib.context import CryptContext
+from fastapi.security import OAuth2PasswordBearer
 
 from dotenv import load_dotenv
 
@@ -16,6 +17,10 @@ ALGORITHM = os.getenv("JWT_ALGORITHM")
 
 ACCESS_TOKEN_EXPIRE_MINUTES = int(
     os.getenv("JWT_ACCESS_TOKEN_EXPIRE_MINUTES")
+)
+
+oauth2_scheme = OAuth2PasswordBearer(
+    tokenUrl="/auth/login"
 )
 
 
@@ -62,3 +67,17 @@ def create_access_token(data: dict):
     )
 
     return encoded_jwt
+
+def decode_access_token(token: str):
+
+    try:
+        payload = jwt.decode(
+            token,
+            SECRET_KEY,
+            algorithms=[ALGORITHM]
+        )
+
+        return payload
+
+    except JWTError:
+        return None

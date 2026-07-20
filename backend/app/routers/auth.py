@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 
 from sqlalchemy.orm import Session
 from app.db.database import SessionLocal
@@ -7,6 +7,8 @@ from app.schemas.user import UserCreate, UserResponse
 from app.services.user_service import create_user
 from app.schemas.user import UserLogin
 from app.services.auth_service import authenticate_user
+from app.core.dependencies import get_current_user
+
 
 
 
@@ -57,10 +59,19 @@ def login(
     if not token:
         raise HTTPException(
             status_code=401,
-            detail="Email ou mot de passe incorrect"
+            detail="Invalid credentials"
         )
 
     return {
         "access_token": token,
         "token_type": "bearer"
     }
+
+@router.get(
+    "/me",
+    response_model=UserResponse
+)
+def me(
+    current_user = Depends(get_current_user)
+):
+    return current_user
