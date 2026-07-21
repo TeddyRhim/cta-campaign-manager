@@ -7,7 +7,10 @@ from app.schemas.user import UserCreate, UserResponse
 from app.services.user_service import create_user
 from app.schemas.user import UserLogin
 from app.services.auth_service import authenticate_user
-from app.core.dependencies import get_current_user
+from app.core.dependencies import (get_current_user, get_db)
+from app.core.permissions import require_admin
+from app.core.security import create_access_token
+from app.models.user import User
 
 
 
@@ -16,18 +19,6 @@ router = APIRouter(
     prefix="/auth",
     tags=["Auth"]
 )
-
-
-
-def get_db():
-
-    db = SessionLocal()
-
-    try:
-        yield db
-
-    finally:
-        db.close()
 
 
 @router.post(
@@ -50,11 +41,16 @@ def login(
     db: Session = Depends(get_db)
 ):
 
-    token = authenticate_user(
+    user = authenticate_user(
         db,
         user_data.email,
         user_data.password
     )
+
+    token = create_access_token({
+        "sub": str(user.id),
+        "email": user.email
+    })
 
     if not token:
         raise HTTPException(
@@ -75,3 +71,14 @@ def me(
     current_user = Depends(get_current_user)
 ):
     return current_user
+
+
+@router.get("/admin-test")
+def admin_test(
+    user: User = Depends(require_admin)
+):
+
+    return {
+        "message": "Bienvenue admin",
+        "email": user.email
+    }

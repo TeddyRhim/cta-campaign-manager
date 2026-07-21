@@ -1,8 +1,10 @@
 from datetime import datetime
 
-from sqlalchemy import Column, Integer, String, DateTime
+from sqlalchemy import Column, Integer, String, DateTime, Enum
 
 from app.db.database import Base
+
+from app.models.enums import UserRole
 
 
 class User(Base):
@@ -44,9 +46,9 @@ class User(Base):
 
 
     role = Column(
-        String,
-        nullable=False,
-        default="OPERATOR"
+    Enum(UserRole),
+    nullable=False,
+    default=UserRole.OPERATOR
     )
 
 
