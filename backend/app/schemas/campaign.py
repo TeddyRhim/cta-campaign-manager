@@ -1,6 +1,7 @@
 from datetime import datetime
 from pydantic import BaseModel, ConfigDict
 from app.models.enums import CampaignStatus
+from app.schemas.contact import ContactResponse
 
 
 class CampaignBase(BaseModel):
@@ -14,6 +15,7 @@ class CampaignCreate(CampaignBase):
 
 class CampaignResponse(CampaignBase):
     id: int
+    contacts: list[ContactResponse] = []
     status: CampaignStatus
     created_by: int
     created_at: datetime

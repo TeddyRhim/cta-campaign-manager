@@ -1,9 +1,9 @@
 from datetime import datetime
 
 from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Enum
-
 from app.db.database import Base
 from app.models.enums import CampaignStatus
+from sqlalchemy.orm import relationship
 
 
 class Campaign(Base):
@@ -47,4 +47,10 @@ class Campaign(Base):
     created_at = Column(
         DateTime,
         default=datetime.utcnow
+    )
+
+    contacts = relationship(
+        "Contact",
+        secondary="campaign_contacts",
+        back_populates="campaigns"
     )

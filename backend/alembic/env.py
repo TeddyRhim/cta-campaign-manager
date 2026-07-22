@@ -6,8 +6,7 @@ from logging.config import fileConfig
 from sqlalchemy import engine_from_config
 from sqlalchemy import pool
 from app.db.database import Base
-from app.models.user import User
-from app.models.campaign import Campaign
+from app.models import *
 from sqlalchemy import create_engine
 
 
