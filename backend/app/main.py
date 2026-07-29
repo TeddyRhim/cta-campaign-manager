@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from sqlalchemy import text
 
 from app.db.database import engine
-from app.routers import auth, campaigns, contacts
+from app.routers import auth, campaigns, contacts, imports
 
 
 
@@ -22,6 +22,11 @@ app.include_router(
 app.include_router(
     contacts.router
 )
+
+app.include_router(
+    imports.router
+)
+
 
 
 @app.get("/")
