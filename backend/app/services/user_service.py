@@ -5,8 +5,6 @@ from app.schemas.user import UserCreate
 
 from app.core.security import (
     hash_password,
-    verify_password,
-    create_access_token
 )
 
 

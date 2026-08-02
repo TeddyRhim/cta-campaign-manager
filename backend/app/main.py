@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from sqlalchemy import text
 
 from app.db.database import engine
-from app.routers import auth, campaigns, contacts, imports
+from app.routers import auth, campaigns, contacts, imports, dashboard
 from fastapi.middleware.cors import CORSMiddleware
 
 
@@ -25,6 +25,10 @@ app.include_router(
 
 app.include_router(
     imports.router
+)
+
+app.include_router(
+    dashboard.router
 )
 
 app.add_middleware(

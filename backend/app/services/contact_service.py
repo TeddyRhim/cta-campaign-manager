@@ -34,3 +34,8 @@ def create_contact(
     db.refresh(contact)
 
     return contact
+
+def get_contacts(
+    db: Session
+):
+    return db.query(Contact).all()
