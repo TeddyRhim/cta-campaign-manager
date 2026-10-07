@@ -4,6 +4,14 @@ Application web de gestion de campagnes permettant de centraliser le suivi des c
 
 Le projet est composé d'une API REST développée avec FastAPI et d'une interface utilisateur développée avec Next.js.
 
+## Aperçu
+
+Captures réalisées avec des données fictives.
+
+| Tableau de bord | Liste des campagnes | Détail d'une campagne |
+| --- | --- | --- |
+| ![Tableau de bord](docs/screenshots/dashboard.jpg) | ![Liste des campagnes](docs/screenshots/campagnes.jpg) | ![Détail d'une campagne](docs/screenshots/detail-campagne.jpg) |
+
 ---
 
 # Stack technique
@@ -42,8 +50,9 @@ Le projet est composé d'une API REST développée avec FastAPI et d'une interfa
 
 ## Campagnes
 
-* Consultation des campagnes
+* Création, consultation, modification et suppression des campagnes
 * Consultation du détail d'une campagne
+* Association de contacts à une campagne
 * Gestion des statuts
 
 Statuts disponibles :
@@ -51,12 +60,18 @@ Statuts disponibles :
 ```
 DRAFT
 ACTIVE
-DONE
+PAUSED
+FINISHED
 ```
+
+## Tableau de bord
+
+* Nombre de campagnes, de contacts et d'imports (`GET /dashboard/stats`)
 
 ## Contacts
 
-* Consultation de la liste des contacts
+* Création et consultation de la liste des contacts
+* Adresse e-mail et téléphone uniques
 * Recherche dynamique côté frontend
 
 ## Imports
@@ -76,24 +91,16 @@ Le backend suit une séparation par responsabilités :
 
 ```
 backend/
+├── alembic/            # migrations
+├── scripts/
+│   └── create_admin.py # création d'un compte administrateur de démonstration
 └── app/
-    ├── core/
-    │   ├── config.py
-    │   ├── database.py
-    │   └── dependencies.py
-    │
-    ├── models/
-    │   ├── user.py
-    │   ├── campaign.py
-    │   ├── contact.py
-    │   └── imports.py
-    │
+    ├── core/           # configuration, sécurité (JWT), permissions, dépendances
+    ├── db/             # moteur et sessions SQLAlchemy
+    ├── models/         # user, campaign, contact, contact_campaign, imports, enums
     ├── schemas/
-    │
-    ├── services/
-    │
-    ├── routers/
-    │
+    ├── services/       # logique métier (dont importers/ pour les fichiers CSV)
+    ├── routers/        # auth, campaigns, contacts, imports, dashboard
     └── main.py
 ```
 
@@ -103,7 +110,8 @@ backend/
 | services | Logique métier                                |
 | schemas  | Validation des données entrantes et sortantes |
 | models   | Modèles SQLAlchemy                            |
-| core     | Configuration globale et dépendances          |
+| core     | Configuration, sécurité et dépendances        |
+| db       | Connexion à la base et sessions               |
 
 ---
 
@@ -158,7 +166,7 @@ cd backend
 Créer un environnement virtuel :
 
 ```bash
-python -m venv venv
+python -m venv .venv
 ```
 
 Activation :
@@ -166,13 +174,13 @@ Activation :
 Windows :
 
 ```bash
-venv\Scripts\activate
+.venv\Scripts\activate
 ```
 
 Linux / Mac :
 
 ```bash
-source venv/bin/activate
+source .venv/bin/activate
 ```
 
 Installer les dépendances :
@@ -188,11 +196,19 @@ DATABASE_URL=postgresql://user:password@localhost:5432/database
 SECRET_KEY=your_secret_key
 ```
 
-Lancer les migrations :
+Créer la base PostgreSQL correspondante, puis lancer les migrations :
 
 ```bash
 alembic upgrade head
 ```
+
+Créer un compte administrateur de démonstration (`admin@cta.com` / `AdminPassword123`) :
+
+```bash
+python -m scripts.create_admin
+```
+
+> Ces identifiants sont ceux d'un compte de démonstration. Ne les utilisez pas tels quels en dehors d'un poste local : modifiez `scripts/create_admin.py` ou changez le mot de passe après la première connexion.
 
 Démarrer l'API :
 
@@ -250,37 +266,15 @@ http://localhost:3000
 
 # API principales
 
-## Authentification
+| Domaine | Méthode et route |
+| --- | --- |
+| Authentification | `POST /auth/register`, `POST /auth/login`, `GET /auth/me` |
+| Campagnes | `POST /campaigns/`, `GET /campaigns/`, `GET /campaigns/{id}`, `PUT /campaigns/{id}`, `DELETE /campaigns/{id}`, `POST /campaigns/{id}/contacts/{contact_id}` |
+| Contacts | `POST /contacts/`, `GET /contacts/` |
+| Imports | `POST /imports/`, `GET /imports/`, `GET /imports/{id}` |
+| Tableau de bord | `GET /dashboard/stats` |
 
-```http
-POST /auth/login
-```
-
-## Campagnes
-
-```http
-GET /campaigns/
-```
-
-```http
-GET /campaigns/{id}
-```
-
-## Contacts
-
-```http
-GET /contacts/
-```
-
-## Imports
-
-```http
-GET /imports/
-```
-
-```http
-POST /imports/
-```
+La documentation interactive complète est disponible sur `/docs` (Swagger).
 
 ---
 
@@ -292,6 +286,7 @@ Le projet utilise :
 * Protection des routes backend
 * Vérification des permissions utilisateur
 * Validation des données avec Pydantic
+* CORS limité à `http://localhost:3000` : à adapter dans `backend/app/main.py` pour un autre hébergement
 
 ---
 
@@ -323,6 +318,7 @@ Le projet utilise :
 * [x] Gestion des imports
 * [x] Interface frontend
 * [x] Recherche côté frontend
+* [x] Tableau de bord (compteurs)
 * [ ] Statistiques avancées
 * [ ] Tests automatisés
 
