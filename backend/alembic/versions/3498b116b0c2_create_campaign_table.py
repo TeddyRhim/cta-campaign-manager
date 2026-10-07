@@ -41,3 +41,5 @@ def downgrade() -> None:
     op.drop_index(op.f('ix_campaigns_id'), table_name='campaigns')
     op.drop_table('campaigns')
     # ### end Alembic commands ###
+    # le type ENUM PostgreSQL survit à la table : sans cela, une nouvelle montée échoue
+    sa.Enum(name='campaignstatus').drop(op.get_bind(), checkfirst=True)
