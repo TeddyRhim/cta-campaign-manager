@@ -1,7 +1,6 @@
 from fastapi import FastAPI
-from sqlalchemy import text
+import os
 
-from app.db.database import engine
 from app.routers import auth, campaigns, contacts, imports, dashboard
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -34,7 +33,12 @@ app.include_router(
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
-        "http://localhost:3000"
+        origin.strip()
+        for origin in os.getenv(
+            "CORS_ORIGINS",
+            "http://localhost:3000"
+        ).split(",")
+        if origin.strip()
     ],
     allow_credentials=True,
     allow_methods=["*"],
@@ -46,13 +50,4 @@ app.add_middleware(
 @app.get("/")
 def root():
 
-    with engine.connect() as connection:
-        result = connection.execute(
-            text("SELECT version();")
-        )
-
-        version = result.fetchone()
-
-    return {
-              "database": version[0]
-    }
+    return {"status": "ok"}

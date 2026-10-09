@@ -16,14 +16,14 @@ export default function LoginPage() {
         e.preventDefault();
 
     try {
-            const response = await login(
+            await login(
                 email,
                 password
             );
 
             router.push("/dashboard");
 
-        } catch (error) {
+        } catch {
             setError("Email ou mot de passe incorrect");
         }
     }

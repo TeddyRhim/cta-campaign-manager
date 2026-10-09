@@ -9,7 +9,8 @@ def add_contact_to_campaign(
     campaign: Campaign,
     contact: Contact
 ):
-    campaign.contacts.append(contact)
+    if contact not in campaign.contacts:
+        campaign.contacts.append(contact)
 
     db.commit()
     db.refresh(campaign)

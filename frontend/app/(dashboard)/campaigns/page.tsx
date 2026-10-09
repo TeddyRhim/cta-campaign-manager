@@ -2,7 +2,6 @@
 
 import { useCampaigns } from "@/hooks/useCampaigns";
 import CampaignTable from "@/components/campaign/CampaignTable";
-import Card from "@/components/ui/Card";
 import Loader from "@/components/ui/Loader";
 import EmptyState from "@/components/ui/EmptyState";
 

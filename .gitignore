@@ -10,6 +10,7 @@ venv/
 # Environment
 .env
 .env.*
+!.env.example
 
 # Database
 *.sqlite3
@@ -28,3 +29,6 @@ dist/
 # OS
 .DS_Store
 Thumbs.db
+
+# Tests
+.pytest_cache/

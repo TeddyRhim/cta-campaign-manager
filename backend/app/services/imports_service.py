@@ -27,7 +27,6 @@ def create_import(
         "phone"
     ]
 
-    rows = read_csv(file)
     campaign = db.query(Campaign).filter(
         Campaign.id == campaign_id
     ).first()
@@ -37,6 +36,17 @@ def create_import(
             status_code=404,
             detail="Campaign not found"
         )
+
+    if (
+        current_user.role != UserRole.ADMIN
+        and campaign.created_by != current_user.id
+    ):
+        raise HTTPException(
+            status_code=403,
+            detail="Not enough permissions"
+        )
+
+    rows = read_csv(file)
 
     new_import = Import(
         filename=file_name,
@@ -51,6 +61,11 @@ def create_import(
     success_count = 0
     error_count = 0
     for row in rows:
+
+        row = {
+            key: (value or "").strip()
+            for key, value in row.items()
+        }
 
         if any(not row.get(field) for field in required_fields):
             error_count += 1
@@ -74,7 +89,7 @@ def create_import(
                 last_name=row["last_name"],
                 email=row["email"],
                 phone=row["phone"],
-                organization=row["organization"]
+                organization=row["organization"] or None
             )
 
             db.add(contact)
