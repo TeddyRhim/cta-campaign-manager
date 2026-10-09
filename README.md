@@ -300,7 +300,7 @@ http://localhost:3000
 
 | Domaine | Méthode et route |
 | --- | --- |
-| Authentification | `POST /auth/register`, `POST /auth/login`, `GET /auth/me` |
+| Authentification | `POST /auth/register` (réservé aux administrateurs), `POST /auth/login`, `GET /auth/me` |
 | Campagnes | `POST /campaigns/`, `GET /campaigns/`, `GET /campaigns/{id}`, `PUT /campaigns/{id}`, `DELETE /campaigns/{id}`, `POST /campaigns/{id}/contacts/{contact_id}` |
 | Contacts | `POST /contacts/`, `GET /contacts/` |
 | Imports | `POST /imports/`, `GET /imports/`, `GET /imports/{id}` |

@@ -7,10 +7,11 @@ def test_root_does_not_expose_database(client):
     assert response.json() == {"status": "ok"}
 
 
-def test_register_then_login_then_me(client):
+def test_register_then_login_then_me(client, admin_headers):
     response = client.post(
         "/auth/register",
         json={"email": "new@example.com", "password": PASSWORD},
+        headers=admin_headers,
     )
     assert response.status_code == 200
     assert response.json()["role"] == "OPERATOR"
@@ -27,10 +28,11 @@ def test_register_then_login_then_me(client):
     assert me.json()["email"] == "new@example.com"
 
 
-def test_register_rejects_short_password(client):
+def test_register_rejects_short_password(client, admin_headers):
     response = client.post(
         "/auth/register",
         json={"email": "new@example.com", "password": "court"},
+        headers=admin_headers,
     )
     assert response.status_code == 422
 
@@ -50,10 +52,18 @@ def test_protected_route_requires_token(client):
     ).status_code == 401
 
 
-def test_admin_route_forbidden_for_operator(client, operator_headers):
-    response = client.get("/auth/admin-test", headers=operator_headers)
+def test_register_requires_authentication(client):
+    response = client.post(
+        "/auth/register",
+        json={"email": "new@example.com", "password": PASSWORD},
+    )
+    assert response.status_code == 401
+
+
+def test_register_forbidden_for_operator(client, operator_headers):
+    response = client.post(
+        "/auth/register",
+        json={"email": "new@example.com", "password": PASSWORD},
+        headers=operator_headers,
+    )
     assert response.status_code == 403
-
-
-def test_admin_route_ok_for_admin(client, admin_headers):
-    assert client.get("/auth/admin-test", headers=admin_headers).status_code == 200
