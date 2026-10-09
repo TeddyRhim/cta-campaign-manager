@@ -93,7 +93,7 @@ Le backend suit une séparation par responsabilités :
 backend/
 ├── alembic/            # migrations
 ├── scripts/
-│   └── create_admin.py # création d'un compte administrateur de démonstration
+│   └── create_admin.py # création d'un compte administrateur (identifiants saisis, jamais en dur)
 └── app/
     ├── core/           # configuration, sécurité (JWT), permissions, dépendances
     ├── db/             # moteur et sessions SQLAlchemy
@@ -202,13 +202,19 @@ Créer la base PostgreSQL correspondante, puis lancer les migrations :
 alembic upgrade head
 ```
 
-Créer un compte administrateur de démonstration (`admin@cta.com` / `AdminPassword123`) :
+Créer un compte administrateur (l'adresse et le mot de passe sont demandés au lancement, le mot de passe n'est pas affiché) :
 
 ```bash
 python -m scripts.create_admin
 ```
 
-> Ces identifiants sont ceux d'un compte de démonstration. Ne les utilisez pas tels quels en dehors d'un poste local : modifiez `scripts/create_admin.py` ou changez le mot de passe après la première connexion.
+Pour automatiser, passer les valeurs par variables d'environnement (jamais dans le code ni dans le dépôt) :
+
+```bash
+ADMIN_EMAIL=moi@exemple.fr ADMIN_PASSWORD='un-mot-de-passe-long' python -m scripts.create_admin
+```
+
+Le mot de passe doit faire au moins 12 caractères. Aucun identifiant par défaut n'est fourni.
 
 Démarrer l'API :
 
