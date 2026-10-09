@@ -26,7 +26,8 @@ router = APIRouter(
 )
 def register(
     user: UserCreate,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    _admin: User = Depends(require_admin)
 ):
 
     return create_user(
@@ -77,13 +78,3 @@ def me(
 ):
     return current_user
 
-
-@router.get("/admin-test")
-def admin_test(
-    user: User = Depends(require_admin)
-):
-
-    return {
-        "message": "Bienvenue admin",
-        "email": user.email
-    }
