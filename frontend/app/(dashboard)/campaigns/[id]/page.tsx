@@ -3,7 +3,6 @@
 import { use } from "react";
 import { useCampaign } from "@/hooks/useCampaign";
 import StatusBadge from "@/components/campaign/StatusBadge";
-import Card from "@/components/ui/Card";
 import Loader from "@/components/ui/Loader";
 import EmptyState from "@/components/ui/EmptyState";
 

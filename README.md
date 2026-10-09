@@ -1,5 +1,8 @@
 # CTA Campaign Manager
 
+[![CI](https://github.com/TeddyRhim/cta-campaign-manager/actions/workflows/ci.yml/badge.svg)](https://github.com/TeddyRhim/cta-campaign-manager/actions/workflows/ci.yml)
+[![Licence : MIT](https://img.shields.io/badge/licence-MIT-green.svg)](LICENSE)
+
 Application web de gestion de campagnes permettant de centraliser le suivi des campagnes, la gestion des contacts et l'import de données.
 
 Le projet est composé d'une API REST développée avec FastAPI et d'une interface utilisateur développée avec Next.js.
@@ -53,7 +56,7 @@ Captures réalisées avec des données fictives.
 * Création, consultation, modification et suppression des campagnes
 * Consultation du détail d'une campagne
 * Association de contacts à une campagne
-* Gestion des statuts
+* Gestion des statuts (modifiables via `PUT /campaigns/{id}`)
 
 Statuts disponibles :
 
@@ -189,12 +192,21 @@ Installer les dépendances :
 pip install -r requirements.txt
 ```
 
-Créer un fichier `.env` :
+Copier `.env.example` en `.env` puis l'adapter :
+
+```bash
+cp .env.example .env
+```
 
 ```env
 DATABASE_URL=postgresql://user:password@localhost:5432/database
-SECRET_KEY=your_secret_key
+JWT_SECRET_KEY=une-longue-chaine-aleatoire
+JWT_ALGORITHM=HS256
+JWT_ACCESS_TOKEN_EXPIRE_MINUTES=60
+CORS_ORIGINS=http://localhost:3000
 ```
+
+`JWT_SECRET_KEY` est obligatoire ; les autres variables JWT ont des valeurs par défaut. `CORS_ORIGINS` accepte plusieurs origines séparées par des virgules.
 
 Créer la base PostgreSQL correspondante, puis lancer les migrations :
 
@@ -233,6 +245,20 @@ Documentation Swagger :
 ```
 http://localhost:8000/docs
 ```
+
+---
+
+# Tests
+
+Les tests du backend utilisent SQLite en mémoire : aucune base PostgreSQL n'est nécessaire.
+
+```bash
+cd backend
+pip install -r requirements-dev.txt
+python -m pytest
+```
+
+La CI lance ces tests, ainsi que le lint, la vérification des types et le build du frontend.
 
 ---
 
@@ -292,7 +318,8 @@ Le projet utilise :
 * Protection des routes backend
 * Vérification des permissions utilisateur
 * Validation des données avec Pydantic
-* CORS limité à `http://localhost:3000` : à adapter dans `backend/app/main.py` pour un autre hébergement
+* CORS limité à `http://localhost:3000` par défaut : à adapter avec la variable `CORS_ORIGINS`
+* Un opérateur ne voit et ne modifie que ses propres campagnes et imports ; la gestion des contacts est réservée aux administrateurs
 
 ---
 
@@ -302,7 +329,6 @@ Le projet utilise :
 
 * Ajout d'un système de refresh token JWT
 * Pagination des résultats
-* Ajout de tests automatisés
 * Gestion centralisée des erreurs
 * Ajout d'une couche repository
 
@@ -326,7 +352,13 @@ Le projet utilise :
 * [x] Recherche côté frontend
 * [x] Tableau de bord (compteurs)
 * [ ] Statistiques avancées
-* [ ] Tests automatisés
+* [x] Tests automatisés (pytest) et intégration continue
+
+---
+
+# Licence
+
+Projet distribué sous licence [MIT](LICENSE).
 
 ---
 

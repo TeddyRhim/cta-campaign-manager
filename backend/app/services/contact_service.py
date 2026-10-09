@@ -1,3 +1,4 @@
+from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
 from app.models.contact import Contact
@@ -11,8 +12,16 @@ def create_contact(
     contact_data: ContactCreate
 ):
     
+    conditions = []
+
+    if contact_data.email:
+        conditions.append(Contact.email == contact_data.email)
+
+    if contact_data.phone:
+        conditions.append(Contact.phone == contact_data.phone)
+
     existing_contact = db.query(Contact).filter(
-        Contact.email == contact_data.email
+        or_(*conditions)
     ).first()
 
     if existing_contact:

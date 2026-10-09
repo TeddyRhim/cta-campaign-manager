@@ -2,7 +2,9 @@ from sqlalchemy.orm import Session
 
 from app.models.campaign import Campaign
 from app.models.user import User
-from app.schemas.campaign import CampaignCreate
+from fastapi import HTTPException
+
+from app.schemas.campaign import CampaignCreate, CampaignUpdate
 from app.models.enums import CampaignStatus, UserRole
 
 
@@ -54,12 +56,22 @@ def get_campaign_by_id(
 def update_campaign_service(
     db: Session,
     campaign: Campaign,
-    title: str,
-    description: str | None
+    campaign_data: CampaignUpdate
 ):
 
-    campaign.title = title
-    campaign.description = description
+    changes = campaign_data.model_dump(exclude_unset=True)
+
+    if "title" in changes and not changes["title"]:
+        raise HTTPException(
+            status_code=422,
+            detail="Title cannot be empty"
+        )
+
+    if changes.get("status") is None:
+        changes.pop("status", None)
+
+    for field, value in changes.items():
+        setattr(campaign, field, value)
 
     db.commit()
     db.refresh(campaign)

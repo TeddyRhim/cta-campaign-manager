@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { Contact } from "@/types/contact";
 
 
@@ -24,10 +23,10 @@ export default function ContactTable({ contacts }: Props) {
                     {contacts.map((contact) => (
                         <tr key={contact.id} className="border-b hover:bg-gray-50">
                             <td className="p-4 font-medium">
-                                {contact.firstname} {contact.lastname}
+                                {contact.first_name} {contact.last_name}
                             </td>
                             <td className="p-4 text-gray-600">
-                                {contact.email}
+                                {contact.email || "-"}
                             </td>
                             <td className="p-4 text-gray-600">
                                 {contact.phone || "-"}

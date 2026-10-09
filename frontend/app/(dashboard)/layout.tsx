@@ -1,6 +1,6 @@
 "use client";
 
-import { ReactNode, useEffect, useState } from "react";
+import { ReactNode, useEffect, useSyncExternalStore } from "react";
 import { useRouter } from "next/navigation";
 import { getToken } from "@/lib/token";
 
@@ -16,21 +16,20 @@ export default function DashboardLayout({
 
     const router = useRouter();
 
-    const [checked, setChecked] = useState(false);
+    const checked = useSyncExternalStore(
+        () => () => {},
+        () => getToken() !== null,
+        () => false
+    );
 
 
     useEffect(() => {
 
-        const token = getToken();
-
-        if (!token) {
+        if (!checked && getToken() === null) {
             router.push("/login");
-            return;
         }
 
-        setChecked(true);
-
-    }, [router]);
+    }, [checked, router]);
 
 
     if (!checked) {

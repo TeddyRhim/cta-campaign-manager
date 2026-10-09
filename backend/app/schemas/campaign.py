@@ -28,3 +28,4 @@ class CampaignUpdate(BaseModel):
 
     title: str | None = None
     description: str | None = None
+    status: CampaignStatus | None = None

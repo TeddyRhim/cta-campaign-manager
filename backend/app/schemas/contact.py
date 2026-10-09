@@ -3,7 +3,7 @@ from pydantic import BaseModel, EmailStr, model_validator, ConfigDict
 
 
 class ContactBase(BaseModel):
-    first_name: str | None = None
+    first_name: str
     last_name: str
     email: EmailStr | None = None
     phone: str | None = None

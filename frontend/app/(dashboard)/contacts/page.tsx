@@ -15,7 +15,7 @@ export default function ContactsPage() {
 
 
     const filteredContacts = contacts.filter((contact) =>
-        `${contact.firstname} ${contact.lastname} ${contact.email}`
+        `${contact.first_name} ${contact.last_name} ${contact.email ?? ""}`
             .toLowerCase()
             .includes(search.toLowerCase())
     );

@@ -24,7 +24,14 @@ def read_csv(file: UploadFile):
     }
     
     content = file.file.read()
-    text = content.decode("utf-8")
+    try:
+        text = content.decode("utf-8-sig")
+    except UnicodeDecodeError:
+        raise HTTPException(
+            status_code=400,
+            detail="CSV file must be UTF-8 encoded"
+        )
+
     reader = csv.DictReader(io.StringIO(text))
 
     def detect_format(fieldnames: list[str]) -> dict[str, str]:
@@ -35,13 +42,13 @@ def read_csv(file: UploadFile):
                 return mapping
 
         raise HTTPException(
-            status_code=404,
+            status_code=400,
             detail="Invalid CSV columns"
         )
 
     def normalize_row(row: dict, mapping: dict[str, str]) -> dict:
         return {
-            internal_name: row[csv_name]
+            internal_name: row.get(csv_name)
             for internal_name, csv_name in mapping.items()
         }
 

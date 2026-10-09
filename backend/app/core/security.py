@@ -13,10 +13,14 @@ load_dotenv()
 
 
 SECRET_KEY = os.getenv("JWT_SECRET_KEY")
-ALGORITHM = os.getenv("JWT_ALGORITHM")
+
+if not SECRET_KEY:
+    raise ValueError("JWT_SECRET_KEY is not defined")
+
+ALGORITHM = os.getenv("JWT_ALGORITHM", "HS256")
 
 ACCESS_TOKEN_EXPIRE_MINUTES = int(
-    os.getenv("JWT_ACCESS_TOKEN_EXPIRE_MINUTES")
+    os.getenv("JWT_ACCESS_TOKEN_EXPIRE_MINUTES", "60")
 )
 
 oauth2_scheme = OAuth2PasswordBearer(

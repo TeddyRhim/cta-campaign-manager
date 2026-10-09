@@ -4,7 +4,6 @@ import { useState } from "react";
 import { useImports } from "@/hooks/useImports";
 import ImportTable from "@/components/import/ImportTable";
 import ImportForm from "@/components/import/ImportForm";
-import Card from "@/components/ui/Card";
 import EmptyState from "@/components/ui/EmptyState";
 import Loader from "@/components/ui/Loader";
 

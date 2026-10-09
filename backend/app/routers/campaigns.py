@@ -112,8 +112,7 @@ def update_campaign(
     return update_campaign_service(
         db,
         campaign,
-        campaign_data.title,
-        campaign_data.description
+        campaign_data
     )
 
 @router.delete("/{campaign_id}")
