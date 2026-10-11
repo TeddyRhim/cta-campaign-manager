@@ -29,7 +29,7 @@ export async function uploadImport(
     const formData = new FormData();
     formData.append("file", file);
 
-    const response = await api.post(
+    const response = await api.post<Import>(
         `/imports/?campaign_id=${campaignId}`,
         formData,
         {

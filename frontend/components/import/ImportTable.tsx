@@ -20,6 +20,12 @@ export default function ImportTable({ imports }: Props) {
                             Statut
                         </th>
                         <th className="p-4 text-left text-sm text-gray-500">
+                            Importés
+                        </th>
+                        <th className="p-4 text-left text-sm text-gray-500">
+                            Erreurs
+                        </th>
+                        <th className="p-4 text-left text-sm text-gray-500">
                             Date
                         </th>
                     </tr>
@@ -38,6 +44,12 @@ export default function ImportTable({ imports }: Props) {
                                 <span className="px-3 py-1 rounded-full text-sm bg-gray-100">
                                     {item.status}
                                 </span>
+                            </td>
+                            <td className="p-4 text-gray-600">
+                                {item.success_count}
+                            </td>
+                            <td className="p-4 text-gray-600">
+                                {item.error_count}
                             </td>
                             <td className="p-4 text-gray-600">
                                 {new Date(

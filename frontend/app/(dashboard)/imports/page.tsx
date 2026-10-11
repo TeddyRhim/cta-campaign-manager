@@ -9,7 +9,7 @@ import Loader from "@/components/ui/Loader";
 
 export default function ImportsPage() {
 
-    const { imports, loading, error } = useImports();
+    const { imports, loading, error, refetch } = useImports();
     const [search, setSearch] = useState("");
 
 
@@ -36,7 +36,7 @@ export default function ImportsPage() {
                 </p>
             </div>
 
-            <ImportForm />
+            <ImportForm onImported={refetch} />
 
             <input
                 value={search}
