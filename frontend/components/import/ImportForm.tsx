@@ -4,7 +4,12 @@ import { useState } from "react";
 import { uploadImport } from "@/services/import.service";
 
 
-export default function ImportForm() {
+interface Props {
+    onImported?: () => void;
+}
+
+
+export default function ImportForm({ onImported }: Props) {
 
     const [file, setFile] = useState<File | null>(null);
     const [message, setMessage] = useState("");
@@ -18,11 +23,26 @@ export default function ImportForm() {
         if (!file) return;
 
         try {
-            await uploadImport(
+            const result = await uploadImport(
                 file,
                 Number(campaignId)
             );
-            setMessage("Import réussi");
+
+            if (result.success_count === 0 && result.error_count > 0) {
+                setMessage(
+                    `Import échoué : aucune ligne valide (${result.error_count} en erreur)`
+                );
+            } else if (result.error_count > 0) {
+                setMessage(
+                    `Import partiel : ${result.success_count} ligne(s) importée(s), ${result.error_count} en erreur`
+                );
+            } else {
+                setMessage(
+                    `Import réussi : ${result.success_count} ligne(s) importée(s)`
+                );
+            }
+
+            onImported?.();
         } catch (error) {
             console.error(error);
             setMessage("Erreur lors de l'import");

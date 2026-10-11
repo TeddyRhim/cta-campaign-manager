@@ -9,6 +9,7 @@ export function useImports() {
     const [imports, setImports] = useState<Import[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
+    const [version, setVersion] = useState(0);
 
 
     useEffect(() => {
@@ -17,6 +18,7 @@ export function useImports() {
                 const data = await getImports();
 
                 setImports(data);
+                setError("");
             } catch(error) {
                 console.error(
                     "Erreur chargement imports :",
@@ -33,12 +35,18 @@ export function useImports() {
 
 
         fetchImports();
-    }, []);
+    }, [version]);
+
+
+    function refetch() {
+        setVersion((current) => current + 1);
+    }
 
 
     return {
         imports,
         loading,
-        error
+        error,
+        refetch
     };
 }
