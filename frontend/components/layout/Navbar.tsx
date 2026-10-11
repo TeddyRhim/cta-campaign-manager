@@ -2,11 +2,14 @@
 
 import { useRouter } from "next/navigation";
 import { logout } from "@/services/auth.service";
+import { useAuth } from "@/hooks/useAuth";
 
 
 export default function Navbar() {
 
     const router = useRouter();
+
+    const { user } = useAuth();
 
 
     function handleLogout() {
@@ -26,11 +29,11 @@ export default function Navbar() {
             <div className="flex items-center gap-4">
                 <div className="text-right">
                     <p className="text-sm font-medium">
-                        Teddy
+                        {user?.email}
                     </p>
 
                     <p className="text-xs text-gray-500">
-                        Administrateur
+                        {user && (user.role === "ADMIN" ? "Administrateur" : "Opérateur")}
                     </p>
                 </div>
 
