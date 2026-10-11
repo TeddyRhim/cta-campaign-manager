@@ -44,11 +44,11 @@ export default function ImportsPage() {
                 placeholder="Rechercher un fichier..."
                 className="w-full bg-white border rounded-lg px-4 py-3"
             />
-            filteredImports.length ? (
+            {filteredImports.length ? (
                 <ImportTable imports={filteredImports} />
             ) : (
                 <EmptyState message="Aucun import trouvé" />
-            )
+            )}
         </main>
     );
 }
