@@ -1,23 +1,18 @@
 "use client";
 
-import { useState } from "react";
 import { useImports } from "@/hooks/useImports";
 import ImportTable from "@/components/import/ImportTable";
 import ImportForm from "@/components/import/ImportForm";
 import EmptyState from "@/components/ui/EmptyState";
 import Loader from "@/components/ui/Loader";
+import Pagination from "@/components/ui/Pagination";
 
 export default function ImportsPage() {
 
-    const { imports, loading, error, refetch } = useImports();
-    const [search, setSearch] = useState("");
-
-
-    const filteredImports = imports.filter((item) =>
-        item.filename
-            .toLowerCase()
-            .includes(search.toLowerCase())
-    );
+    // La recherche et la pagination sont faites par l'API, sur tous les imports.
+    const {
+        imports, loading, error, refetch, search, setSearch, page, pageCount, total, setPage
+    } = useImports();
 
 
     if (loading) return <Loader />;
@@ -44,8 +39,11 @@ export default function ImportsPage() {
                 placeholder="Rechercher un fichier..."
                 className="w-full bg-white border rounded-lg px-4 py-3"
             />
-            {filteredImports.length ? (
-                <ImportTable imports={filteredImports} />
+            {imports.length ? (
+                <>
+                    <ImportTable imports={imports} />
+                    <Pagination page={page} pageCount={pageCount} total={total} onChange={setPage} />
+                </>
             ) : (
                 <EmptyState message="Aucun import trouvé" />
             )}

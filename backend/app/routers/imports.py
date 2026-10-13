@@ -2,7 +2,10 @@ from fastapi import APIRouter, Depends, File, UploadFile
 from sqlalchemy.orm import Session
 
 from app.core.dependencies import get_current_user, get_db
+from app.core.pagination import PageParams, page_params, paginate
 from app.models.user import User
+from app.schemas.imports import ImportResponse
+from app.schemas.pagination import Page
 from app.services.imports_service import create_import, get_import, get_imports
 
 router = APIRouter(
@@ -26,15 +29,13 @@ def upload_import(
         current_user=current_user
     )
 
-@router.get("/")
+@router.get("/", response_model=Page[ImportResponse])
 def list_imports(
+    params: PageParams = Depends(page_params),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    return get_imports(
-        db=db,
-        current_user=current_user
-    )
+    return paginate(get_imports(db, current_user, params.search), params)
 
 @router.get("/{import_id}")
 def get_import_by_id(

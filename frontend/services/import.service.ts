@@ -1,14 +1,20 @@
 import api from "./api";
+import { Page, PageQuery } from "@/types/pagination";
 import { getToken } from "@/lib/token";
 import { Import } from "@/types/import";
 
 
-export async function getImports() {
+export async function getImports(query: PageQuery) {
     const token = getToken();
 
-    const response = await api.get<Import[]>(
+    const response = await api.get<Page<Import>>(
         "/imports/",
         {
+            params: {
+                page: query.page,
+                page_size: query.pageSize,
+                search: query.search
+            },
             headers: {
                 Authorization: `Bearer ${token}`
             }

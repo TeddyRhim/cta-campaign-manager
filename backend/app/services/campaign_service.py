@@ -1,5 +1,5 @@
 from fastapi import HTTPException
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, selectinload
 
 from app.models.campaign import Campaign
 from app.models.enums import CampaignStatus, UserRole
@@ -28,16 +28,19 @@ def create_campaign(
 
 def get_campaigns_service(
     db: Session,
-    current_user: User
+    current_user: User,
+    search: str | None = None,
 ):
+    # Les contacts de chaque campagne sont chargés en une requête (évite une requête par campagne).
+    query = db.query(Campaign).options(selectinload(Campaign.contacts))
 
-    if current_user.role == UserRole.ADMIN:
-        return db.query(Campaign).all()
+    if current_user.role != UserRole.ADMIN:
+        query = query.filter(Campaign.created_by == current_user.id)
 
+    if search:
+        query = query.filter(Campaign.title.icontains(search, autoescape=True))
 
-    return db.query(Campaign).filter(
-        Campaign.created_by == current_user.id
-    ).all()
+    return query.order_by(Campaign.created_at.desc(), Campaign.id.desc())
 
 
 def get_campaign_by_id(

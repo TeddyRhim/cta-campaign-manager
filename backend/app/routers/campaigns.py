@@ -2,10 +2,12 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from app.core.dependencies import get_current_user, get_db
+from app.core.pagination import PageParams, page_params, paginate
 from app.models.contact import Contact
 from app.models.enums import UserRole
 from app.models.user import User
 from app.schemas.campaign import CampaignCreate, CampaignResponse, CampaignUpdate
+from app.schemas.pagination import Page
 from app.services.campaign_contact_service import add_contact_to_campaign
 from app.services.campaign_service import (
     create_campaign,
@@ -39,14 +41,15 @@ def create(
 
 @router.get(
     "/",
-    response_model=list[CampaignResponse]
+    response_model=Page[CampaignResponse]
 )
 def get_campaigns(
+    params: PageParams = Depends(page_params),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
 
-    return get_campaigns_service(db, current_user)
+    return paginate(get_campaigns_service(db, current_user, params.search), params)
 
 
 @router.get(

@@ -25,6 +25,7 @@ Python 3.11+, Node 22+, PostgreSQL (base créée à la main). Variables : `backe
 
 ## Règles métier et pièges
 - Un opérateur ne voit que ses campagnes et ses imports ; la gestion des contacts est réservée aux ADMIN. `POST /auth/register` est réservé aux administrateurs.
+- Listes paginées : `GET /campaigns/`, `/contacts/` et `/imports/` renvoient `{items, total, page, page_size}` ; paramètres `page` (à partir de 1), `page_size` (20 par défaut, 100 au plus) et `search` (texte, sans joker SQL). Toute nouvelle liste passe par `core/pagination.py` (`page_params`, `paginate`) avec un tri stable. Côté frontend, le hook `usePaginatedList` gère page, recherche avec délai et chargement ; la recherche se fait côté serveur, jamais en filtrant la page affichée.
 - Les tests forcent `DATABASE_URL=sqlite://` et une clé JWT de test dans `conftest.py` avant tout import : ils ne touchent jamais PostgreSQL. Données de test fictives (`@example.com`).
 - Le jeton JWT est stocké dans `localStorage` ; une réponse 401 redirige vers `/login`. JWT signé avec PyJWT (HS256/384/512 seulement), mots de passe hachés avec `bcrypt` directement (compatible avec les empreintes passlib existantes). `JWT_SECRET_KEY` : 32 caractères au moins.
 - Connexion : 5 échecs en 5 minutes par IP ou par e-mail bloquent les essais (429). Compteur en mémoire du processus (`core/login_throttle.py`) : prévoir un stockage partagé si plusieurs processus.
