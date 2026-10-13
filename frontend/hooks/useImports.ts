@@ -1,52 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { Import } from "@/types/import";
 import { getImports } from "@/services/import.service";
+import { usePaginatedList } from "./usePaginatedList";
 
 
 export function useImports() {
-    const [imports, setImports] = useState<Import[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState("");
-    const [version, setVersion] = useState(0);
+    const list = usePaginatedList(getImports, "Impossible de charger les imports");
 
-
-    useEffect(() => {
-        async function fetchImports() {
-            try {
-                const data = await getImports();
-
-                setImports(data);
-                setError("");
-            } catch(error) {
-                console.error(
-                    "Erreur chargement imports :",
-                    error
-                );
-
-                setError(
-                    "Impossible de charger les imports"
-                );
-            } finally {
-                setLoading(false);
-            }
-        }
-
-
-        fetchImports();
-    }, [version]);
-
-
-    function refetch() {
-        setVersion((current) => current + 1);
-    }
-
-
-    return {
-        imports,
-        loading,
-        error,
-        refetch
-    };
+    return { ...list, imports: list.items };
 }

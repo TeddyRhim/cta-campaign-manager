@@ -44,6 +44,20 @@ def create_contact(
     return contact
 
 def get_contacts(
-    db: Session
+    db: Session,
+    search: str | None = None,
 ):
-    return db.query(Contact).all()
+    query = db.query(Contact)
+
+    # Chaque mot doit apparaître dans le prénom, le nom, l'e-mail ou le téléphone.
+    for word in (search or "").split():
+        query = query.filter(
+            or_(
+                Contact.first_name.icontains(word, autoescape=True),
+                Contact.last_name.icontains(word, autoescape=True),
+                Contact.email.icontains(word, autoescape=True),
+                Contact.phone.icontains(word, autoescape=True),
+            )
+        )
+
+    return query.order_by(Contact.last_name, Contact.first_name, Contact.id)

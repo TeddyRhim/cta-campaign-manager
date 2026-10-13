@@ -14,7 +14,7 @@ def test_operator_cannot_manage_contacts(client, operator_headers):
 def test_create_and_list_contacts(client, admin_headers):
     response = client.post("/contacts/", json=PAYLOAD, headers=admin_headers)
     assert response.status_code == 200
-    contacts = client.get("/contacts/", headers=admin_headers).json()
+    contacts = client.get("/contacts/", headers=admin_headers).json()["items"]
     assert contacts[0]["first_name"] == "Ada"
 
 

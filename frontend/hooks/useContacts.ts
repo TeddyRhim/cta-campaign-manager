@@ -1,44 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { Contact } from "@/types/contact";
 import { getContacts } from "@/services/contact.service";
+import { usePaginatedList } from "./usePaginatedList";
 
 
 export function useContacts() {
-    const [contacts, setContacts] = useState<Contact[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState("");
+    const list = usePaginatedList(getContacts, "Impossible de charger les contacts");
 
-
-    useEffect(() => {
-        async function fetchContacts() {
-            try {
-                const data = await getContacts();
-
-                setContacts(data);
-            } catch(error) {
-                console.error(
-                    "Erreur chargement contacts :",
-                    error
-                );
-
-                setError(
-                    "Impossible de charger les contacts"
-                );
-            } finally {
-                setLoading(false);
-            }
-        }
-
-
-        fetchContacts();
-    }, []);
-
-
-    return {
-        contacts,
-        loading,
-        error
-    };
+    return { ...list, contacts: list.items };
 }

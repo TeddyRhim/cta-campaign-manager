@@ -74,14 +74,18 @@ def create_import(
 
 def get_imports(
     db: Session,
-    current_user: User
+    current_user: User,
+    search: str | None = None,
 ):
-    if current_user.role == UserRole.ADMIN:
-        return db.query(Import).all()
+    query = db.query(Import)
 
-    return db.query(Import).filter(
-        Import.created_by_id == current_user.id
-    ).all()
+    if current_user.role != UserRole.ADMIN:
+        query = query.filter(Import.created_by_id == current_user.id)
+
+    if search:
+        query = query.filter(Import.filename.icontains(search, autoescape=True))
+
+    return query.order_by(Import.created_at.desc(), Import.id.desc())
 
 
 def get_import(

@@ -4,11 +4,12 @@ import { useCampaigns } from "@/hooks/useCampaigns";
 import CampaignTable from "@/components/campaign/CampaignTable";
 import Loader from "@/components/ui/Loader";
 import EmptyState from "@/components/ui/EmptyState";
+import Pagination from "@/components/ui/Pagination";
 
 
 export default function CampaignsPage() {
 
-    const { campaigns, loading, error } = useCampaigns();
+    const { campaigns, loading, error, page, pageCount, total, setPage } = useCampaigns();
 
     if (loading) {
         return <Loader />;
@@ -26,7 +27,10 @@ export default function CampaignsPage() {
             </div>
 
             {campaigns.length ? (
-                <CampaignTable campaigns={campaigns} />
+                <>
+                    <CampaignTable campaigns={campaigns} />
+                    <Pagination page={page} pageCount={pageCount} total={total} onChange={setPage} />
+                </>
             ) : (
                 <EmptyState message="Aucune campagne disponible" />
             )}

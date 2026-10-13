@@ -2,9 +2,11 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from app.core.dependencies import get_current_user, get_db
+from app.core.pagination import PageParams, page_params, paginate
 from app.models.enums import UserRole
 from app.models.user import User
 from app.schemas.contact import ContactCreate, ContactResponse
+from app.schemas.pagination import Page
 from app.services.contact_service import create_contact, get_contacts
 
 router = APIRouter(
@@ -36,9 +38,10 @@ def create(
 
 @router.get(
     "/",
-    response_model=list[ContactResponse]
+    response_model=Page[ContactResponse]
 )
 def get_all(
+    params: PageParams = Depends(page_params),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
@@ -48,4 +51,4 @@ def get_all(
             detail="Only admins can access contacts"
         )
 
-    return get_contacts(db)
+    return paginate(get_contacts(db, params.search), params)

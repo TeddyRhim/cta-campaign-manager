@@ -10,15 +10,15 @@ def test_create_and_list_own_campaigns(client, operator_headers, other_operator_
     created = create_campaign(client, operator_headers)
     assert created["status"] == "DRAFT"
 
-    mine = client.get("/campaigns/", headers=operator_headers).json()
-    theirs = client.get("/campaigns/", headers=other_operator_headers).json()
+    mine = client.get("/campaigns/", headers=operator_headers).json()["items"]
+    theirs = client.get("/campaigns/", headers=other_operator_headers).json()["items"]
     assert [c["id"] for c in mine] == [created["id"]]
     assert theirs == []
 
 
 def test_admin_sees_all_campaigns(client, operator_headers, admin_headers):
     create_campaign(client, operator_headers)
-    assert len(client.get("/campaigns/", headers=admin_headers).json()) == 1
+    assert client.get("/campaigns/", headers=admin_headers).json()["total"] == 1
 
 
 def test_other_operator_cannot_access_campaign(client, operator_headers, other_operator_headers):
