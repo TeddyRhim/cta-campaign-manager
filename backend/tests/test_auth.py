@@ -67,3 +67,28 @@ def test_register_forbidden_for_operator(client, operator_headers):
         headers=operator_headers,
     )
     assert response.status_code == 403
+
+
+def test_login_is_blocked_after_repeated_failures(client, db):
+    from app.core.login_throttle import MAX_FAILURES
+
+    make_user(db, "cible@example.com")
+    for _ in range(MAX_FAILURES):
+        response = client.post(
+            "/auth/login", json={"email": "cible@example.com", "password": "mauvais"}
+        )
+        assert response.status_code == 401
+    blocked = client.post(
+        "/auth/login", json={"email": "cible@example.com", "password": PASSWORD}
+    )
+    assert blocked.status_code == 429
+
+
+def test_password_hash_is_bcrypt_and_verifies():
+    from app.core.security import hash_password, verify_password
+
+    hashed = hash_password("mot-de-passe-solide")
+    assert hashed.startswith("$2b$")
+    assert verify_password("mot-de-passe-solide", hashed)
+    assert not verify_password("autre", hashed)
+    assert not verify_password("x", "pas-une-empreinte")

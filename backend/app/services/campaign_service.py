@@ -1,11 +1,10 @@
+from fastapi import HTTPException
 from sqlalchemy.orm import Session
 
 from app.models.campaign import Campaign
-from app.models.user import User
-from fastapi import HTTPException
-
-from app.schemas.campaign import CampaignCreate, CampaignUpdate
 from app.models.enums import CampaignStatus, UserRole
+from app.models.user import User
+from app.schemas.campaign import CampaignCreate, CampaignUpdate
 
 
 def create_campaign(

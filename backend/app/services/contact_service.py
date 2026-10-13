@@ -1,10 +1,9 @@
+from fastapi import HTTPException
 from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
 from app.models.contact import Contact
 from app.schemas.contact import ContactCreate
-from fastapi import HTTPException
-
 
 
 def create_contact(

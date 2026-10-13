@@ -76,3 +76,63 @@ def test_dashboard_stats(client, operator_headers):
     upload(client, operator_headers, campaign_id, HEADER + "Ada,L,a@example.com,0600000001,\n")
     stats = client.get("/dashboard/stats", headers=operator_headers).json()
     assert stats == {"campaigns_count": 1, "contacts_count": 1, "imports_count": 1}
+
+
+def test_import_same_row_twice_creates_one_link(client, operator_headers, db):
+    from app.models.contact_campaign import CampaignContact
+
+    campaign_id = make_campaign(client, operator_headers)
+    line = "Ada,Lovelace,ada@example.com,0600000001,\n"
+    body = upload(client, operator_headers, campaign_id, HEADER + line + line).json()
+    assert body["status"] == "SUCCESS"
+    links = db.query(CampaignContact).filter(CampaignContact.campaign_id == campaign_id)
+    assert links.count() == 1
+
+
+def test_import_normalizes_phone_and_email(client, operator_headers):
+    campaign_id = make_campaign(client, operator_headers)
+    csv = (
+        HEADER
+        + "Ada,Lovelace,Ada@Example.com,06 00 00 00 01,\n"
+        + "Ada,Lovelace,ada@example.com,06.00.00.00.01,\n"
+    )
+    upload(client, operator_headers, campaign_id, csv)
+    campaign = client.get(f"/campaigns/{campaign_id}", headers=operator_headers).json()
+    assert len(campaign["contacts"]) == 1
+    assert campaign["contacts"][0]["phone"] == "0600000001"
+
+
+def test_import_email_and_phone_of_two_contacts_is_an_error(client, operator_headers):
+    campaign_id = make_campaign(client, operator_headers)
+    upload(
+        client,
+        operator_headers,
+        campaign_id,
+        HEADER
+        + "Ada,Lovelace,ada@example.com,0600000001,\n"
+        + "Alan,Turing,alan@example.com,0600000002,\n",
+    )
+    body = upload(
+        client,
+        operator_headers,
+        campaign_id,
+        HEADER + "Ada,Lovelace,ada@example.com,0600000002,\n",
+    ).json()
+    assert (body["status"], body["success_count"], body["error_count"]) == ("FAILED", 0, 1)
+
+
+def test_import_rejects_invalid_email(client, operator_headers):
+    campaign_id = make_campaign(client, operator_headers)
+    body = upload(
+        client, operator_headers, campaign_id, HEADER + "Ada,Lovelace,ada@,0600000001,\n"
+    ).json()
+    assert body["error_count"] == 1
+
+
+def test_import_rejects_too_large_file(client, operator_headers, monkeypatch):
+    from app.services.importers import csv_importers
+
+    monkeypatch.setattr(csv_importers, "MAX_FILE_BYTES", 100)
+    campaign_id = make_campaign(client, operator_headers)
+    csv = HEADER + "Ada,Lovelace,ada@example.com,0600000001,\n" * 5
+    assert upload(client, operator_headers, campaign_id, csv).status_code == 413

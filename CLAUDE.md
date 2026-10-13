@@ -8,11 +8,11 @@ Backend, depuis `backend/` (toujours lancer d'ici, `alembic.ini` a une URL vide 
 - Lancer : `uvicorn app.main:app --reload` (port 8000, documentation sur `/docs`).
 - Migrations : `alembic upgrade head`.
 - Créer un administrateur : `python -m scripts.create_admin` (saisie) ou variables `ADMIN_EMAIL` et `ADMIN_PASSWORD` (12 caractères minimum).
-- Tests : `python -m pytest -q`. Aucun linter Python configuré.
+- Tests : `python -m pytest -q`. Lint : `ruff check .` (corriger avec `ruff check . --fix`) ; la CI échoue tant qu'il ne passe pas.
 
 Frontend, depuis `frontend/` : `npm ci`, `npm run dev` (port 3000), `npm run lint`, `npx tsc --noEmit`, `npm run build`. Pas de tests frontend.
 
-La CI (`.github/workflows/ci.yml`) exécute pytest côté backend, puis lint, vérification des types et build côté frontend. Elle ne teste pas les migrations Alembic sur PostgreSQL.
+La CI (`.github/workflows/ci.yml`) exécute ruff, pytest et `pip-audit` côté backend ; `alembic upgrade head`, `alembic check` et un aller-retour de migration sur PostgreSQL ; lint, types, build et `npm audit` côté frontend. Actions épinglées par SHA, droits en lecture seule.
 
 ## Prérequis
 Python 3.11+, Node 22+, PostgreSQL (base créée à la main). Variables : `backend/.env` (`DATABASE_URL`, `JWT_SECRET_KEY` obligatoire, `JWT_ALGORITHM`, `JWT_ACCESS_TOKEN_EXPIRE_MINUTES`, `CORS_ORIGINS`) et `frontend/.env.local` (`NEXT_PUBLIC_API_URL`). Pas de Docker. Jamais de secret ni de mot de passe par défaut dans le code.
@@ -26,5 +26,7 @@ Python 3.11+, Node 22+, PostgreSQL (base créée à la main). Variables : `backe
 ## Règles métier et pièges
 - Un opérateur ne voit que ses campagnes et ses imports ; la gestion des contacts est réservée aux ADMIN. `POST /auth/register` est réservé aux administrateurs.
 - Les tests forcent `DATABASE_URL=sqlite://` et une clé JWT de test dans `conftest.py` avant tout import : ils ne touchent jamais PostgreSQL. Données de test fictives (`@example.com`).
-- Le jeton JWT est stocké dans `localStorage` ; une réponse 401 redirige vers `/login`.
+- Le jeton JWT est stocké dans `localStorage` ; une réponse 401 redirige vers `/login`. JWT signé avec PyJWT (HS256/384/512 seulement), mots de passe hachés avec `bcrypt` directement (compatible avec les empreintes passlib existantes). `JWT_SECRET_KEY` : 32 caractères au moins.
+- Connexion : 5 échecs en 5 minutes par IP ou par e-mail bloquent les essais (429). Compteur en mémoire du processus (`core/login_throttle.py`) : prévoir un stockage partagé si plusieurs processus.
+- Import CSV : 5 Mo au plus ; e-mail validé et mis en minuscules, téléphone normalisé (chiffres seuls, `+` initial gardé) ; contacts et liens traités par lots ; une ligne dont l'e-mail et le téléphone désignent deux contacts différents est une erreur. Lien campagne-contact unique (`uq_campaign_contacts_campaign_contact`).
 - Toute nouvelle migration Alembic se teste sur une base vide ; une modification de modèle sans migration est une erreur.

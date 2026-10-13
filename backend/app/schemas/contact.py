@@ -1,5 +1,6 @@
 from datetime import datetime
-from pydantic import BaseModel, EmailStr, model_validator, ConfigDict
+
+from pydantic import BaseModel, ConfigDict, EmailStr, model_validator
 
 
 class ContactBase(BaseModel):

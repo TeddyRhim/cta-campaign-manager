@@ -1,9 +1,9 @@
-from fastapi import FastAPI
 import os
 
-from app.routers import auth, campaigns, contacts, imports, dashboard
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.routers import auth, campaigns, contacts, dashboard, imports
 
 app = FastAPI(
     title="CTA Campaign Manager API",

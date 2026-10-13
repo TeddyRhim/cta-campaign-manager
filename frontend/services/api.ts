@@ -13,6 +13,8 @@ api.interceptors.response.use(
         if (error.response?.status === 401) {
             localStorage.removeItem("access_token");
 
+            // Hors composant React (intercepteur Axios) : useRouter() n'est pas disponible ici.
+            // eslint-disable-next-line @next/next/no-location-assign-relative-destination
             window.location.href = "/login";
         }
 

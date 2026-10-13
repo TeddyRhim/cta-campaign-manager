@@ -1,12 +1,11 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
-from app.core.dependencies import get_db, get_current_user
-from app.models.user import User
+from app.core.dependencies import get_current_user, get_db
 from app.models.campaign import Campaign
 from app.models.contact import Contact
 from app.models.imports import Import
-
+from app.models.user import User
 
 router = APIRouter(
     prefix="/dashboard",

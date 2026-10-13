@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, ForeignKey, DateTime
+from sqlalchemy import Column, DateTime, ForeignKey, Integer, UniqueConstraint
 from sqlalchemy.sql import func
 
 from app.db.database import Base
@@ -6,6 +6,11 @@ from app.db.database import Base
 
 class CampaignContact(Base):
     __tablename__ = "campaign_contacts"
+    __table_args__ = (
+        UniqueConstraint(
+            "campaign_id", "contact_id", name="uq_campaign_contacts_campaign_contact"
+        ),
+    )
 
     id = Column(Integer, primary_key=True, index=True)
 

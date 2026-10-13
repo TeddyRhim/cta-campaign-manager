@@ -1,9 +1,8 @@
 from datetime import datetime
 
-from sqlalchemy import Column, Integer, String, DateTime, Enum
+from sqlalchemy import Column, DateTime, Enum, Integer, String
 
 from app.db.database import Base
-
 from app.models.enums import UserRole
 
 
