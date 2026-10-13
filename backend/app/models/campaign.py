@@ -1,9 +1,10 @@
 from datetime import datetime
 
-from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Enum
+from sqlalchemy import Column, DateTime, Enum, ForeignKey, Integer, String
+from sqlalchemy.orm import relationship
+
 from app.db.database import Base
 from app.models.enums import CampaignStatus
-from sqlalchemy.orm import relationship
 
 
 class Campaign(Base):

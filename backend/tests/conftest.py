@@ -1,7 +1,7 @@
 import os
 
 os.environ["DATABASE_URL"] = "sqlite://"
-os.environ["JWT_SECRET_KEY"] = "test-secret-key"
+os.environ["JWT_SECRET_KEY"] = "cle-de-test-uniquement-pour-pytest-0123456789"
 os.environ["JWT_ALGORITHM"] = "HS256"
 os.environ["JWT_ACCESS_TOKEN_EXPIRE_MINUTES"] = "30"
 
@@ -20,6 +20,15 @@ from app.models.enums import UserRole
 from app.models.user import User
 
 PASSWORD = "mot-de-passe-solide"
+
+
+@pytest.fixture(autouse=True)
+def reset_login_throttle():
+    from app.core import login_throttle
+
+    login_throttle.clear()
+    yield
+    login_throttle.clear()
 
 
 @pytest.fixture()

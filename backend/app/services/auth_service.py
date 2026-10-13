@@ -1,8 +1,7 @@
 from sqlalchemy.orm import Session
 
-from app.models.user import User
-from app.services.user_service import get_user_by_email
 from app.core.security import verify_password
+from app.services.user_service import get_user_by_email
 
 
 def authenticate_user(

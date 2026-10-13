@@ -1,18 +1,12 @@
 import os
-from dotenv import load_dotenv
-
 from logging.config import fileConfig
 
-from sqlalchemy import engine_from_config
-from sqlalchemy import pool
-from app.db.database import Base
-from app.models import *
-from sqlalchemy import create_engine
+from dotenv import load_dotenv
+from sqlalchemy import create_engine, pool
 
-
-
+import app.models  # noqa: F401  (enregistre les tables pour l'autogénération)
 from alembic import context
-
+from app.db.database import Base
 
 load_dotenv()
 

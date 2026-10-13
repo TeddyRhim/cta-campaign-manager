@@ -1,0 +1,11 @@
+# Lint Python : bloque la CI tant qu'il ne passe pas. Corriger en local : `ruff check . --fix`.
+target-version = "py311"
+line-length = 100
+extend-exclude = ["alembic/versions"]
+
+[lint]
+select = ["E", "F", "I", "UP", "B"]
+
+[lint.flake8-bugbear]
+# Depends() et File() en valeur par défaut sont l'écriture normale de FastAPI.
+extend-immutable-calls = ["fastapi.Depends", "fastapi.File", "fastapi.Query"]

@@ -1,13 +1,10 @@
 import os
+from datetime import UTC, datetime, timedelta
 
-from datetime import datetime, timedelta, timezone
-
-from jose import JWTError, jwt
-from passlib.context import CryptContext
-from fastapi.security import OAuth2PasswordBearer
-
+import bcrypt
+import jwt
 from dotenv import load_dotenv
-
+from fastapi.security import OAuth2PasswordBearer
 
 load_dotenv()
 
@@ -19,6 +16,10 @@ if not SECRET_KEY:
 
 ALGORITHM = os.getenv("JWT_ALGORITHM", "HS256")
 
+# Seuls les algorithmes à clé partagée sont acceptés : la clé est un secret unique.
+if ALGORITHM not in {"HS256", "HS384", "HS512"}:
+    raise ValueError("JWT_ALGORITHM must be HS256, HS384 or HS512")
+
 ACCESS_TOKEN_EXPIRE_MINUTES = int(
     os.getenv("JWT_ACCESS_TOKEN_EXPIRE_MINUTES", "60")
 )
@@ -27,61 +28,36 @@ oauth2_scheme = OAuth2PasswordBearer(
     tokenUrl="/auth/login"
 )
 
-
-pwd_context = CryptContext(
-    schemes=["bcrypt"],
-    deprecated="auto"
-)
+# bcrypt ne lit que les 72 premiers octets : on tronque explicitement, comme le faisait passlib,
+# pour que les empreintes existantes restent valides.
+BCRYPT_MAX_BYTES = 72
 
 
-def hash_password(password: str):
-
-    return pwd_context.hash(password)
-
-
-def verify_password(
-    plain_password: str,
-    hashed_password: str
-):
-
-    return pwd_context.verify(
-        plain_password,
-        hashed_password
-    )
+def _password_bytes(password: str) -> bytes:
+    return password.encode("utf-8")[:BCRYPT_MAX_BYTES]
 
 
-def create_access_token(data: dict):
+def hash_password(password: str) -> str:
+    return bcrypt.hashpw(_password_bytes(password), bcrypt.gensalt()).decode("ascii")
 
-    to_encode = data.copy()
 
-    expire = datetime.now(timezone.utc) + timedelta(
-        minutes=ACCESS_TOKEN_EXPIRE_MINUTES
-    )
-
-    to_encode.update(
-        {
-            "exp": expire
-        }
-    )
-
-    encoded_jwt = jwt.encode(
-        to_encode,
-        SECRET_KEY,
-        algorithm=ALGORITHM
-    )
-
-    return encoded_jwt
-
-def decode_access_token(token: str):
-
+def verify_password(plain_password: str, hashed_password: str) -> bool:
     try:
-        payload = jwt.decode(
-            token,
-            SECRET_KEY,
-            algorithms=[ALGORITHM]
+        return bcrypt.checkpw(
+            _password_bytes(plain_password), hashed_password.encode("ascii")
         )
+    except ValueError:
+        return False
 
-        return payload
 
-    except JWTError:
+def create_access_token(data: dict) -> str:
+    to_encode = data.copy()
+    to_encode["exp"] = datetime.now(UTC) + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+
+
+def decode_access_token(token: str) -> dict | None:
+    try:
+        return jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+    except jwt.PyJWTError:
         return None

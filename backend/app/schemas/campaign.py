@@ -1,5 +1,7 @@
 from datetime import datetime
+
 from pydantic import BaseModel, ConfigDict
+
 from app.models.enums import CampaignStatus
 from app.schemas.contact import ContactResponse
 

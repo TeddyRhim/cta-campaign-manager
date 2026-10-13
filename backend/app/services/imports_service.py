@@ -1,15 +1,18 @@
+from datetime import UTC, datetime
+
+from email_validator import EmailNotValidError, validate_email
+from fastapi import HTTPException, UploadFile
 from sqlalchemy.orm import Session
-from fastapi import UploadFile
 
-
+from app.models.campaign import Campaign
+from app.models.contact import Contact
+from app.models.contact_campaign import CampaignContact
 from app.models.imports import Import
 from app.models.user import User, UserRole
-from app.models.contact import Contact
-from app.models.campaign import Campaign
-from app.models.contact_campaign import CampaignContact
-from fastapi import HTTPException
 from app.services.importers.csv_importers import read_csv
-from datetime import datetime, timezone
+
+REQUIRED_FIELDS = ("first_name", "last_name", "email", "phone")
+LOOKUP_CHUNK = 500
 
 
 def create_import(
@@ -19,13 +22,6 @@ def create_import(
     file: UploadFile,
     current_user: User
 ):
-
-    required_fields = [
-        "first_name",
-        "last_name",
-        "email",
-        "phone"
-    ]
 
     campaign = db.query(Campaign).filter(
         Campaign.id == campaign_id
@@ -57,58 +53,9 @@ def create_import(
     )
     db.add(new_import)
 
-
-    success_count = 0
-    error_count = 0
-    for row in rows:
-
-        row = {
-            key: (value or "").strip()
-            for key, value in row.items()
-        }
-
-        if any(not row.get(field) for field in required_fields):
-            error_count += 1
-            continue
-
-        if "@" not in row["email"]:
-            error_count += 1
-            continue
-
-        existing_contact = db.query(Contact).filter(
-            (Contact.email == row["email"]) |
-            (Contact.phone == row["phone"])
-        ).first()
-
-        if existing_contact:
-            contact = existing_contact
-
-        else :
-            contact = Contact(
-                first_name=row["first_name"],
-                last_name=row["last_name"],
-                email=row["email"],
-                phone=row["phone"],
-                organization=row["organization"] or None
-            )
-
-            db.add(contact)
-            db.flush()
-
-        existing_association = db.query(CampaignContact).filter(
-            CampaignContact.campaign_id == campaign_id,
-            CampaignContact.contact_id == contact.id
-        ).first()
-
-        if not existing_association:
-            association = CampaignContact(
-                campaign_id=campaign_id,
-                contact_id=contact.id
-            )
-        
-            db.add(association)
-
-        success_count += 1
+    valid_rows, error_count = _clean_rows(rows)
+    success_count, conflicts = _link_contacts(db, campaign_id, valid_rows)
+    error_count += conflicts
 
     new_import.success_count = success_count
     new_import.error_count = error_count
@@ -118,7 +65,7 @@ def create_import(
         new_import.status = "PARTIAL"
     else:
         new_import.status = "FAILED"
-    new_import.processed_at = datetime.now(timezone.utc)
+    new_import.processed_at = datetime.now(UTC)
 
     db.commit()
     db.refresh(new_import)
@@ -162,3 +109,94 @@ def get_import(
         )
 
     return import_
+
+def normalize_phone(phone: str) -> str:
+    """Retire espaces, points, tirets et parenthèses ; garde un « + » initial."""
+    digits = "".join(c for c in phone if c.isdigit())
+    return ("+" + digits) if phone.strip().startswith("+") else digits
+
+
+def _clean_rows(rows: list[dict]) -> tuple[list[dict], int]:
+    """Lignes valides et normalisées, et nombre de lignes rejetées."""
+    valid, errors = [], 0
+    for raw in rows:
+        row = {key: (value or "").strip() for key, value in raw.items()}
+        if any(not row.get(field) for field in REQUIRED_FIELDS):
+            errors += 1
+            continue
+        try:
+            row["email"] = validate_email(
+                row["email"], check_deliverability=False
+            ).normalized.lower()
+        except EmailNotValidError:
+            errors += 1
+            continue
+        row["phone"] = normalize_phone(row["phone"])
+        if len(row["phone"].lstrip("+")) < 6:
+            errors += 1
+            continue
+        valid.append(row)
+    return valid, errors
+
+
+def _chunks(values: list[str]):
+    for start in range(0, len(values), LOOKUP_CHUNK):
+        yield values[start:start + LOOKUP_CHUNK]
+
+
+def _link_contacts(db: Session, campaign_id: int, rows: list[dict]) -> tuple[int, int]:
+    """Crée les contacts manquants et les lie à la campagne, par lots.
+
+    Retourne (lignes importées, lignes en conflit). Une ligne dont l'e-mail et le
+    téléphone désignent deux contacts différents est un conflit, pas un succès.
+    """
+    emails = list({row["email"] for row in rows})
+    phones = list({row["phone"] for row in rows})
+
+    by_email: dict[str, Contact] = {}
+    by_phone: dict[str, Contact] = {}
+    for chunk in _chunks(emails):
+        for contact in db.query(Contact).filter(Contact.email.in_(chunk)):
+            by_email[contact.email] = contact
+            by_phone.setdefault(contact.phone, contact)
+    for chunk in _chunks(phones):
+        for contact in db.query(Contact).filter(Contact.phone.in_(chunk)):
+            by_phone[contact.phone] = contact
+            by_email.setdefault(contact.email, contact)
+
+    matched: list[Contact] = []
+    conflicts = 0
+    for row in rows:
+        contact_e = by_email.get(row["email"])
+        contact_p = by_phone.get(row["phone"])
+        if contact_e and contact_p and contact_e is not contact_p:
+            conflicts += 1
+            continue
+        contact = contact_e or contact_p
+        if contact is None:
+            contact = Contact(
+                first_name=row["first_name"],
+                last_name=row["last_name"],
+                email=row["email"],
+                phone=row["phone"],
+                organization=row.get("organization") or None,
+            )
+            db.add(contact)
+            by_email[contact.email] = contact
+            by_phone[contact.phone] = contact
+        matched.append(contact)
+
+    db.flush()  # un seul flush : les nouveaux contacts reçoivent leur id
+
+    linked = {
+        contact_id
+        for (contact_id,) in db.query(CampaignContact.contact_id).filter(
+            CampaignContact.campaign_id == campaign_id
+        )
+    }
+    for contact in matched:
+        if contact.id not in linked:
+            db.add(CampaignContact(campaign_id=campaign_id, contact_id=contact.id))
+            linked.add(contact.id)
+
+    return len(matched), conflicts
